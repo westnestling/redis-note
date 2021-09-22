@@ -44,15 +44,22 @@
 /* Unused arguments generate annoying warnings... */
 #define DICT_NOTUSED(V) ((void) V)
 
+/*
+ * 哈希表 元素结构
+ */
 typedef struct dictEntry {
     void *key;
+    /*
+     * 这种实现方法是一种节省内存的开发小技巧，非常值得学习。因为当值为整数或双精度浮点数时，
+     * 由于其本身就是 64 位，就可以不用指针指向了，而是可以直接存在键值对的结构体中，这样就避免了再用一个指针，从而节省了内存空间。
+     */
     union {
-        void *val;
+        void *val; // 实际value指针
         uint64_t u64;
         int64_t s64;
         double d;
     } v;
-    struct dictEntry *next;
+    struct dictEntry *next; // 下一节点
 } dictEntry;
 
 typedef struct dictType {
@@ -65,19 +72,23 @@ typedef struct dictType {
 } dictType;
 
 /* This is our hash table structure. Every dictionary has two of this as we
- * implement incremental rehashing, for the old to the new table. */
+ * implement incremental rehashing, for the old to the new table.
+ *
+ * 哈希表定义
+ * */
 typedef struct dictht {
-    dictEntry **table;
-    unsigned long size;
+    dictEntry **table; // 表结构为二位数字 ，指向 dictEntry
+    unsigned long size;  // 表容量大小
     unsigned long sizemask;
     unsigned long used;
 } dictht;
 
+// 准备两个hashTable，与 rehash 有关
 typedef struct dict {
     dictType *type;
     void *privdata;
-    dictht ht[2];
-    long rehashidx; /* rehashing not in progress if rehashidx == -1 */
+    dictht ht[2]; //两个Hash表，交替使用，用于rehash操作
+    long rehashidx; /* //Hash表是否在进行rehash的标识，-1表示没有进行rehash 。rehashing not in progress if rehashidx == -1 */
     unsigned long iterators; /* number of iterators currently running */
 } dict;
 

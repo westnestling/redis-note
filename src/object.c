@@ -39,9 +39,13 @@
 /* ===================== Creation and parsing of objects ==================== */
 
 robj *createObject(int type, void *ptr) {
+    //给redisObject结构体分配空间
     robj *o = zmalloc(sizeof(*o));
+    //设置redisObject的类型
     o->type = type;
+    //设置redisObject的编码类型，此处是OBJ_ENCODING_RAW，表示常规的SDS
     o->encoding = OBJ_ENCODING_RAW;
+    //直接将传入的指针赋值给redisObject中的指针。
     o->ptr = ptr;
     o->refcount = 1;
 
@@ -73,7 +77,10 @@ robj *makeObjectShared(robj *o) {
 }
 
 /* Create a string object with encoding OBJ_ENCODING_RAW, that is a plain
- * string object where o->ptr points to a proper sds string. */
+ * string object where o->ptr points to a proper sds string.
+ *
+ * 指向 SDS 结构的指针是由 sdsnewlen 函数返回的，sdsnewlen 函数正是用来创建 SDS 结构
+ * */
 robj *createRawStringObject(const char *ptr, size_t len) {
     return createObject(OBJ_STRING, sdsnewlen(ptr,len));
 }
@@ -114,10 +121,14 @@ robj *createEmbeddedStringObject(const char *ptr, size_t len) {
  * used.
  *
  * The current limit of 44 is chosen so that the biggest string object
- * we allocate as EMBSTR will still fit into the 64 byte arena of jemalloc. */
+ * we allocate as EMBSTR will still fit into the 64 byte arena of jemalloc.
+ *
+ * 创建String对象
+ * */
 #define OBJ_ENCODING_EMBSTR_SIZE_LIMIT 44
 robj *createStringObject(const char *ptr, size_t len) {
     if (len <= OBJ_ENCODING_EMBSTR_SIZE_LIMIT)
+        // 创建嵌入式字符串对象
         return createEmbeddedStringObject(ptr,len);
     else
         return createRawStringObject(ptr,len);
