@@ -807,7 +807,10 @@ struct sharedObjectsStruct {
     sds minstring, maxstring;
 };
 
-/* ZSETs use a specialized version of Skiplists */
+/* ZSETs use a specialized version of Skiplists
+ *
+ * 跳表 节点数据结构
+ * */
 typedef struct zskiplistNode {
     sds ele;
     double score;
@@ -818,12 +821,19 @@ typedef struct zskiplistNode {
     } level[];
 } zskiplistNode;
 
+/*
+ * 跳表数据结构
+ * 定义了跳表的头结点和尾结点、跳表的长度，以及跳表的最大层数
+ */
 typedef struct zskiplist {
     struct zskiplistNode *header, *tail;
     unsigned long length;
     int level;
 } zskiplist;
 
+/*
+ * zset数据结构
+ */
 typedef struct zset {
     dict *dict;
     zskiplist *zsl;

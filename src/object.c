@@ -87,9 +87,19 @@ robj *createRawStringObject(const char *ptr, size_t len) {
 
 /* Create a string object with encoding OBJ_ENCODING_EMBSTR, that is
  * an object where the sds string is actually an unmodifiable string
- * allocated in the same chunk as the object itself. */
+ * allocated in the same chunk as the object itself.
+ *
+ * Redis 会通过设计实现一块连续的内存空间，把 redisObject 结构体和 SDS 结构体紧凑地放置在一起。
+ * 这样一来，对于不超过 44 字节的字符串来说，就可以避免内存碎片和两次内存分配的开销了
+ * */
 robj *createEmbeddedStringObject(const char *ptr, size_t len) {
     robj *o = zmalloc(sizeof(robj)+sizeof(struct sdshdr8)+len+1);
+    /*
+     * createEmbeddedStringObject 函数在分配了内存空间之后，就会创建
+     * SDS 结构的指针 sh，并把 sh 指向这块连续空间中 SDS 结构头所在的位置，
+     * 下面的代码显示了这步操作。其中，o 是 redisObject 结构体的变量，o+1
+     * 表示将内存地址从变量 o 开始移动一段距离，而移动的距离等于 redisObject 这个结构体的大小。
+     */
     struct sdshdr8 *sh = (void*)(o+1);
 
     o->type = OBJ_STRING;
@@ -108,6 +118,9 @@ robj *createEmbeddedStringObject(const char *ptr, size_t len) {
     if (ptr == SDS_NOINIT)
         sh->buf[len] = '\0';
     else if (ptr) {
+        /*
+         * 把参数中传入的指针 ptr 指向的字符串，拷贝到 SDS 结构体中的字符数组，并在数组最后添加结束字符
+         */
         memcpy(sh->buf,ptr,len);
         sh->buf[len] = '\0';
     } else {

@@ -55,7 +55,7 @@ struct __attribute__ ((__packed__)) sdshdr8 {
     uint8_t len; /* 字符数组现有长度*/
     uint8_t alloc; /* 字符数组的已分配空间，不包括结构体和\0结束字符*/
     unsigned char flags; /* SDS类型*/
-//    char buf[]; /*字符数组*/
+    char buf[]; /*字符数组*/
 //    uint8_t len; /* used */
 //    uint8_t alloc; /* excluding the header and null terminator */
 //    unsigned char flags; /* 3 lsb of type, 5 unused bits */
