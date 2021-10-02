@@ -37,7 +37,17 @@
  * at head or tail position as specified by 'where'.
  *
  * There is no need for the caller to increment the refcount of 'value' as
- * the function takes care of it if needed. */
+ * the function takes care of it if needed.
+ *
+ * /*
+ * 将给定元素添加到列表的表头或表尾。
+ *
+ * 参数 where 决定了新元素添加的位置：
+ *  - REDIS_HEAD 将新元素添加到表头
+ *  - REDIS_TAIL 将新元素添加到表尾
+ * 调用者无须担心 value 的引用计数，因为这个函数会负责这方面的工作。
+ */
+
 void listTypePush(robj *subject, robj *value, int where) {
     if (subject->encoding == OBJ_ENCODING_QUICKLIST) {
         int pos = (where == LIST_HEAD) ? QUICKLIST_HEAD : QUICKLIST_TAIL;
@@ -196,6 +206,7 @@ void listTypeConvert(robj *subject, int enc) {
 
 void pushGenericCommand(client *c, int where) {
     int j, pushed = 0;
+    // 取出列表对象
     robj *lobj = lookupKeyWrite(c->db,c->argv[1]);
 
     if (lobj && lobj->type != OBJ_LIST) {
@@ -203,21 +214,29 @@ void pushGenericCommand(client *c, int where) {
         return;
     }
 
+    // 遍历所有输入值，并将它们添加到列表中
     for (j = 2; j < c->argc; j++) {
         if (!lobj) {
+            // 如果列表对象不存在，那么创建一个，并关联到数据库
             lobj = createQuicklistObject();
             quicklistSetOptions(lobj->ptr, server.list_max_ziplist_size,
                                 server.list_compress_depth);
             dbAdd(c->db,c->argv[1],lobj);
         }
+        // 将值推入到列表
+        // 这个过程中，会对是否需要进行转码作判断
         listTypePush(lobj,c->argv[j],where);
         pushed++;
     }
+
+    // 返回添加的节点数量
     addReplyLongLong(c, (lobj ? listTypeLength(lobj) : 0));
+    // 如果至少有一个元素被成功推入，那么执行以下代码
     if (pushed) {
         char *event = (where == LIST_HEAD) ? "lpush" : "rpush";
-
+        // 发送键修改信号
         signalModifiedKey(c->db,c->argv[1]);
+        // 发送事件通知
         notifyKeyspaceEvent(NOTIFY_LIST,event,c->argv[1],c->db->id);
     }
     server.dirty += pushed;

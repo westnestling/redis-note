@@ -1423,7 +1423,8 @@ robj *rdbLoadCheckModuleValue(rio *rdb, char *modulename) {
 }
 
 /* Load a Redis object of the specified type from the specified file.
- * On success a newly allocated object is returned, otherwise NULL. */
+ * On success a newly allocated object is returned, otherwise NULL.
+ * */
 robj *rdbLoadObject(int rdbtype, rio *rdb, robj *key) {
     robj *o = NULL, *ele, *dec;
     uint64_t len;
@@ -1890,7 +1891,8 @@ void rdbLoadProgressCallback(rio *r, const void *buf, size_t len) {
 }
 
 /* Load an RDB file from the rio stream 'rdb'. On success C_OK is returned,
- * otherwise C_ERR is returned and 'errno' is set accordingly. */
+ * otherwise C_ERR is returned and 'errno' is set accordingly.
+ * */
 int rdbLoadRio(rio *rdb, rdbSaveInfo *rsi, int loading_aof) {
     uint64_t dbid;
     int type, rdbver;
