@@ -482,7 +482,7 @@ robj *tryObjectEncoding(robj *o) {
      * representable as a 32 nor 64 bit integer. */
     len = sdslen(s);
     // 对字符串进行检查
-    // 只对长度小于或等于 21 字节，并且可以被解释为整数的字符串进行编码
+    // 只对长度小于或等于 20 字节，并且可以被解释为整数的字符串进行编码
     if (len <= 20 && string2l(s,len,&value)) {
         /* This object is encodable as a long. Try to use a shared object.
          * Note that we avoid using shared integers when maxmemory is used
@@ -493,6 +493,7 @@ robj *tryObjectEncoding(robj *o) {
             value >= 0 &&
             value < OBJ_SHARED_INTEGERS)
         {
+            // 小于10000 使用共享数字
             decrRefCount(o);
             incrRefCount(shared.integers[value]);
             return shared.integers[value];
