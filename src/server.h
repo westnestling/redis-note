@@ -359,8 +359,11 @@ typedef long long ustime_t; /* microsecond time type. */
 /* Zipped structures related defaults */
 #define OBJ_HASH_MAX_ZIPLIST_ENTRIES 512
 #define OBJ_HASH_MAX_ZIPLIST_VALUE 64
+// 大于512 set会使用hash table
 #define OBJ_SET_MAX_INTSET_ENTRIES 512
+// 数据量大于128会转换为跳表
 #define OBJ_ZSET_MAX_ZIPLIST_ENTRIES 128
+// 单个数据大于64字节会转为跳表
 #define OBJ_ZSET_MAX_ZIPLIST_VALUE 64
 #define OBJ_STREAM_NODE_MAX_BYTES 4096
 #define OBJ_STREAM_NODE_MAX_ENTRIES 100

@@ -1360,6 +1360,7 @@ int zsetAdd(robj *zobj, double score, sds ele, int *flags, double *newscore) {
             zobj->ptr = zzlInsert(zobj->ptr,ele,score);
             if (zzlLength(zobj->ptr) > server.zset_max_ziplist_entries ||
                 sdslen(ele) > server.zset_max_ziplist_value)
+                // OBJ_ZSET_MAX_ZIPLIST_VALUE 64 单个value长度大于64
                 zsetConvert(zobj,OBJ_ENCODING_SKIPLIST);
             if (newscore) *newscore = score;
             *flags |= ZADD_ADDED;
