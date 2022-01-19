@@ -42,16 +42,16 @@
  * attempted_compress: 1 bit, boolean, used for verifying during testing.
  * extra: 10 bits, free for future use; pads out the remainder of 32 bits */
 typedef struct quicklistNode {
-    struct quicklistNode *prev;
-    struct quicklistNode *next;
-    unsigned char *zl;
-    unsigned int sz;             /* ziplist size in bytes */
-    unsigned int count : 16;     /* count of items in ziplist */
-    unsigned int encoding : 2;   /* RAW==1 or LZF==2 */
-    unsigned int container : 2;  /* NONE==1 or ZIPLIST==2 */
-    unsigned int recompress : 1; /* was this node previous compressed? */
-    unsigned int attempted_compress : 1; /* node can't compress; too small */
-    unsigned int extra : 10; /* more bits to steal for future usage */
+    struct quicklistNode *prev;   // 前一个quicklistNode
+    struct quicklistNode *next;   // 后一个quicklistNode
+    unsigned char *zl;              //quicklistNode指向的ziplist
+    unsigned int sz;             /* ziplist size in bytes ziplist的字节大小 */
+    unsigned int count : 16;     /* count of items in ziplist ziplist中的元素个数 */
+    unsigned int encoding : 2;   /* RAW==1 or LZF==2 编码格式，原生字节数组或压缩存储 */
+    unsigned int container : 2;  /* NONE==1 or ZIPLIST==2 存储方式 */
+    unsigned int recompress : 1; /* was this node previous compressed? 数据是否被压缩 */
+    unsigned int attempted_compress : 1; /* node can't compress; too small 数据能否被压缩 */
+    unsigned int extra : 10; /* more bits to steal for future usage 预留的bit位 */
 } quicklistNode;
 
 /* quicklistLZF is a 4+N byte struct holding 'sz' followed by 'compressed'.
