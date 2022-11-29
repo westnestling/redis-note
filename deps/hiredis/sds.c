@@ -192,13 +192,16 @@ void sdsclear(sds s) {
 /* Enlarge the free space at the end of the sds string so that the caller
  * is sure that after calling this function can overwrite up to addlen
  * bytes after the end of the string, plus one more byte for nul term.
+ * 扩大sds字符串末尾的空闲空间，以便调用者确定在调用此函数后可以覆盖字符串结束后的addlen字节，并为null项增加一个字节。
  *
  * Note: this does not change the *length* of the sds string as returned
  * by sdslen(), but only the free buffer space we have. */
 sds sdsMakeRoomFor(sds s, size_t addlen) {
     void *sh, *newsh;
+    // 获得可用空间大小
     size_t avail = sdsavail(s);
     size_t len, newlen;
+    // 判断使用那种SDS数据结构
     char type, oldtype = s[-1] & SDS_TYPE_MASK;
     int hdrlen;
 
@@ -206,13 +209,19 @@ sds sdsMakeRoomFor(sds s, size_t addlen) {
     if (avail >= addlen) return s;
 
     len = sdslen(s);
+    // 结构体头节点位置
     sh = (char*)s-sdsHdrSize(oldtype);
+    // 新的长度
     newlen = (len+addlen);
+    // sds规定：如果扩展后的字符串总长度小于1M则新字符串长度为扩展后的两倍
+    // 如果大于1M，则新的总长度为扩展后的总长度加上1M
+    // 这样做的目的是减少Redis内存分配的次数，同时尽量节省空间
     if (newlen < SDS_MAX_PREALLOC)
+        // 新长度为预测长度*2
         newlen *= 2;
     else
         newlen += SDS_MAX_PREALLOC;
-
+    // 根据新的长度判断新的字符串对应结构体类型
     type = sdsReqType(newlen);
 
     /* Don't use type 5: the user is appending to the string and type 5 is
@@ -222,15 +231,20 @@ sds sdsMakeRoomFor(sds s, size_t addlen) {
 
     hdrlen = sdsHdrSize(type);
     if (oldtype==type) {
+        // +1代表字符串结束符
+        // 如果与原类型相同，直接调用realloc函数扩充内存
         newsh = s_realloc(sh, hdrlen+newlen+1);
         if (newsh == NULL) return NULL;
         s = (char*)newsh+hdrlen;
     } else {
+        // 如果类型调整了，header的大小就需要调整
+        // 这时就需要移动buf[]部分，所以不能使用realloc
         /* Since the header size changes, need to move the string forward,
          * and can't use realloc */
         newsh = s_malloc(hdrlen+newlen+1);
         if (newsh == NULL) return NULL;
         memcpy((char*)newsh+hdrlen, s, len+1);
+        // 释放原来的内存
         s_free(sh);
         s = (char*)newsh+hdrlen;
         s[-1] = type;
