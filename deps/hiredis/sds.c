@@ -155,7 +155,9 @@ sds sdsdup(const sds s) {
     return sdsnewlen(s, sdslen(s));
 }
 
-/* Free an sds string. No operation is performed if 's' is NULL. */
+/* Free an sds string. No operation is performed if 's' is NULL.
+ * 内存要整体释放，所以要先计算出header起始指针，把它传给s_free函数。这个指针也正是在sdsnewlen中调用s_malloc返回的那个地址。
+ * */
 void sdsfree(sds s) {
     if (s == NULL) return;
     s_free((char*)s-sdsHdrSize(s[-1]));
@@ -259,18 +261,24 @@ sds sdsMakeRoomFor(sds s, size_t addlen) {
  * will require a reallocation.
  *
  * After the call, the passed sds string is no longer valid and all the
- * references must be substituted with the new pointer returned by the call. */
+ * references must be substituted with the new pointer returned by the call.
+ *
+ * sds空余空间回收
+ * */
+// 用来回收sds空余空间，压缩内存，函数调用后，s会无效
+// 实际上，就是重新分配一块内存，将原有数据拷贝到新内存上，并释放原有空间
+// 新内存的大小比原来小了alloc-len大小
 sds sdsRemoveFreeSpace(sds s) {
     void *sh, *newsh;
     char type, oldtype = s[-1] & SDS_TYPE_MASK;
     int hdrlen;
-    size_t len = sdslen(s);
+    size_t len = sdslen(s);// 获取字符串的实际大小
     sh = (char*)s-sdsHdrSize(oldtype);
 
     type = sdsReqType(len);
     hdrlen = sdsHdrSize(type);
     if (oldtype==type) {
-        newsh = s_realloc(sh, hdrlen+len+1);
+        newsh = s_realloc(sh, hdrlen+len+1);// 申请的内存大小为hdrlen+len，原有的空余空间不算
         if (newsh == NULL) return NULL;
         s = (char*)newsh+hdrlen;
     } else {
